@@ -5,6 +5,7 @@ ol이나 ul형태의 리스트나 DIV내의 child들에 순차적으로 애니�
 애니메이션의 형태는 Rotate와 Blink 타입이 있음.
 
 API
+
 1. 초기화
 	@param id => Element ID 값
 	@param _options => 초기 옵션 지정값(없으면 패스)
