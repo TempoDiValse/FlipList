@@ -10,7 +10,7 @@
 		@param _options => 초기 옵션 지정값(없으면 패스)
 
 	2. 옵션 값
-		@key flipType(String) => rotate, blink
+		@key flipType(String) => rotate, blink, protrude
 		@key flipDirection(String(UpperCase)) => X, Y (flipType이 rotate일 경우 사용가능)
 	
 	3. 기타 메소드
@@ -122,9 +122,27 @@ var FlipList = (function(){
 			opacity += increment;
 			obj.style.opacity = ease(opacity, 1.0);
 
-			registerAnimation(alphaAnimation, obj, complete);
+			registerAnimation(blinkAnimation, obj, complete);
 		}else{
 			release();
+			complete(++row);
+		}
+	}
+
+	var protrudeAnimation = function(obj, complete){
+		if(degree <= 90){
+			degree += increment;
+			
+			var xValue = Math.abs(20 * Math.sin((2 * Math.PI) *(degree/180)));
+			console.log(xValue);
+
+			obj.style.transform = "translateX("+xValue+"px)";
+
+			registerAnimation(protrudeAnimation, obj, complete);
+		}else{
+			console.log(obj.id+" End");
+			release();
+
 			complete(++row);
 		}
 	}
@@ -132,17 +150,26 @@ var FlipList = (function(){
 	var animate = function(elIndex){
 		if(elIndex < child.length){
 			var flipType = option("flipType");
+			
+			switch(flipType){
+				case "rotate":
+					degree = 0;
+					increment = 3;
 
-			if(flipType == "rotate"){
-				degree = 0;
-				increment = 3;
+					rotateAnimation(child[elIndex], animate);	
+					break;
+				case "blink":
+					opacity = 0.0;
+					increment = 0.02;
 
-				rotateAnimation(child[elIndex], animate);
-			}else if(flipType == "blink"){
-				opacity = 0.0;
-				increment = 0.02;
+					blinkAnimation(child[elIndex], animate);
+					break;
+				case "protrude":
+					degree = 0;
+					increment = 1;
 
-				blinkAnimation(child[elIndex], animate);
+					protrudeAnimation(child[elIndex], animate);
+					break;
 			}
 		}else{
 			row = 0;
@@ -176,7 +203,7 @@ var FlipList = (function(){
 		var flipType = option("flipType");
 		
 		var cssProperty = "";
-		if(flipType == "rotate"){
+		if(flipType == "rotate" || flipType == "protrude"){
 			cssProperty = "transform";
 		}else if(flipType == "blink"){
 			cssProperty = "opacity";
