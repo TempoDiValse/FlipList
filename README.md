@@ -11,7 +11,7 @@ API
 	@param _options => 초기 옵션 지정값(없으면 패스)
 
 2. 옵션 값<br>
-	@key flipType(String) => rotate, blink<br>
+	@key flipType(String) => rotate, blink, protrude <br>
 	@key flipDirection(String(UpperCase)) => X, Y (flipType이 rotate일 경우 사용가능)
 
 3. 기타 메소드
