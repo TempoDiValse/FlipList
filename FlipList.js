@@ -2,7 +2,7 @@
 	FlipList
 
 	ol이나 ul형태의 리스트나 DIV내의 child들에 순차적으로 애니메이션을 입혀준다.
-	애니메이션의 형태는 Rotate와 Blink 타입이 있음.
+	애니메이션의 형태는 Rotate와 Blink, Protrude, Slide 타입이 있음.
 
 	API
 	1. 초기화
@@ -10,7 +10,7 @@
 		@param _options => 초기 옵션 지정값(없으면 패스)
 
 	2. 옵션 값
-		@key flipType(String) => rotate, blink, protrude
+		@key flipType(String) => rotate, blink, protrude, slide
 		@key flipDirection(String(UpperCase)) => X, Y (flipType이 rotate일 경우 사용가능)
 	
 	3. 기타 메소드
@@ -32,7 +32,7 @@ var FlipList = (function(){
 	var _proto = FlipList.prototype;
 
 	var options = {
-		flipType: "rotate",
+		flipType: "slide",
 		flipDirection: 'X'
 	}
 
@@ -80,7 +80,7 @@ var FlipList = (function(){
 
 		elFlipState = new Array();
 		
-		release();
+		release("all");
 		animInterval = null;
 
 		for(var i=0,size=child.length; i<size; i++){
@@ -89,6 +89,10 @@ var FlipList = (function(){
 			if(typeof obj === 'object'){
 				if(!obj.id) obj.id = "flipRow_"+i;
 				if(option("flipType") == "blink" && i == 0) obj.style.opacity = 0.0;
+				if(option("flipType") == "slide"){
+					obj.style.transform = "translateY(10px)";
+					obj.style.opacity = 0.0;
+				}
 
 				elFlipState.push(false);
 			}
@@ -98,21 +102,22 @@ var FlipList = (function(){
 	var row = 0;
 
 	var degree = 0;
+	var opacity = 0.0;
+	var offset = 0.0;
 
 	var increment = 0;
-	var opacity = 0.0;
 
 	var animInterval;
 
 	var rotateAnimation = function(obj, complete){
-		if(degree <= 360){
+		if(degree < 360){
 			degree += increment;
 
 			obj.style.transform = "rotate"+option("flipDirection")+"("+degree+"deg)";
 			
 			registerAnimation(rotateAnimation, obj, complete);
 		}else{
-			release();
+			release(obj);
 			complete(++row);
 		}
 	}
@@ -124,7 +129,7 @@ var FlipList = (function(){
 
 			registerAnimation(blinkAnimation, obj, complete);
 		}else{
-			release();
+			release(obj);
 			complete(++row);
 		}
 	}
@@ -134,43 +139,66 @@ var FlipList = (function(){
 			degree += increment;
 			
 			var xValue = Math.abs(20 * Math.sin((2 * Math.PI) *(degree/180)));
-			console.log(xValue);
-
+			
 			obj.style.transform = "translateX("+xValue+"px)";
 
 			registerAnimation(protrudeAnimation, obj, complete);
 		}else{
-			console.log(obj.id+" End");
-			release();
+			release(obj);
+			complete(++row);
+		}
+	}
 
+	var slideAnimation = function(obj, complete){
+		if(offset > 0.0){
+			offset -= increment;
+			opacity += (increment-0.045);
+
+			obj.style.transform = "translateY("+offset+"px)";
+			obj.style.opacity = ease(opacity, 1.0);
+
+			registerAnimation(slideAnimation, obj, complete);
+		}else{
+
+			release(obj);
 			complete(++row);
 		}
 	}
 
 	var animate = function(elIndex){
 		if(elIndex < child.length){
-			var flipType = option("flipType");
-			
-			switch(flipType){
+			var _func;
+
+			switch(option("flipType")){
 				case "rotate":
 					degree = 0;
 					increment = 3;
 
-					rotateAnimation(child[elIndex], animate);	
+					_func = rotateAnimation;
 					break;
 				case "blink":
 					opacity = 0.0;
 					increment = 0.02;
 
-					blinkAnimation(child[elIndex], animate);
+					_func = blinkAnimation;
 					break;
 				case "protrude":
 					degree = 0;
 					increment = 1;
 
-					protrudeAnimation(child[elIndex], animate);
+					_func = protrudeAnimation;
+					break;
+				case "slide":
+					offset = 10;
+					opacity = 0.0;
+
+					increment = 0.05;
+
+					_func = slideAnimation;
 					break;
 			}
+			
+			_func.call(this, child[elIndex], animate);	
 		}else{
 			row = 0;
 		}
@@ -193,26 +221,46 @@ var FlipList = (function(){
 		}
 	}
 
-	function release(){
+	function release(obj){
 		if(animInterval != null){
 			clearInterval(animInterval.interval);
 		}
-
 		animInterval = null;
 		
-		var flipType = option("flipType");
-		
-		var cssProperty = "";
-		if(flipType == "rotate" || flipType == "protrude"){
-			cssProperty = "transform";
-		}else if(flipType == "blink"){
-			cssProperty = "opacity";
-		}
+		var cssProps = new Array();
 
-		for(var i=0; i<child.length; i++){
-			var obj = child[i];
-			
-			child[i].style[cssProperty] = "";
+		switch(option("flipType")){
+			case "rotate":
+			case "protrude":
+				cssProps.push({ prop: "transform" });
+				break;
+			case "blink":
+				cssProps.push({ prop: "opacity" });
+				break;
+			case "slide":
+				cssProps.push({ prop: "transform" });
+				cssProps.push({	prop: "opacity" });
+				break;
+		}
+		
+		// re-configure styles of each element or all elements
+		if(typeof obj === "string"){ // "all"
+			for(var i=0; i<child.length; i++){
+				var obj = child[i];
+				for(var j=0; j<cssProps.length; j++){
+					var prop = cssProps[j].prop;
+					var value = cssProps[j].value || "";
+
+					obj.style[prop] = value;
+				}
+			}
+		}else{ 
+			for(var i=0; i<cssProps.length; i++){
+				var prop = cssProps[i].prop;
+				var value = cssProps[i].value || "";
+
+				obj.style[prop] = value;
+			}
 		}
 	}
 
