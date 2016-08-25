@@ -1,5 +1,5 @@
 # FlipList
-Animations of showing on a list for JS
+Basic animations of showing on a list for JS
 
 ol이나 ul형태의 리스트나 DIV내의 child들에 순차적으로 애니메이션을 입혀준다.
 애니메이션의 형태는 Rotate와 Blink, Protrude, Slide 타입이 있음.
