@@ -2,7 +2,7 @@
 Animations of showing on a list for JS
 
 ol이나 ul형태의 리스트나 DIV내의 child들에 순차적으로 애니메이션을 입혀준다.
-애니메이션의 형태는 Rotate와 Blink 타입이 있음.
+애니메이션의 형태는 Rotate와 Blink, Protrude, Slide 타입이 있음.
 
 API
 
@@ -11,7 +11,7 @@ API
 	@param _options => 초기 옵션 지정값(없으면 패스)
 
 2. 옵션 값<br>
-	@key flipType(String) => rotate, blink, protrude <br>
+	@key flipType(String) => rotate, blink, protrude, slide <br>
 	@key flipDirection(String(UpperCase)) => X, Y (flipType이 rotate일 경우 사용가능)
 
 3. 기타 메소드
