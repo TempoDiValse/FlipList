@@ -12,6 +12,8 @@
 	2. 옵션 값
 		@key flipType(String) => rotate, blink, protrude, slide
 		@key flipDirection(String(UpperCase)) => X, Y (flipType이 rotate일 경우 사용가능)
+		@key velocity(Integer/Float) => 각 타입마다 최대 최소 허용 속도치가 다름.
+		@key onComplete(Function) => 완료 Callback
 	
 	3. 기타 메소드
 		- getProperty : 옵션값을 확인 할 수 있음
@@ -29,11 +31,36 @@
 var FlipList = (function(){
 	"use strict";
 	
+	var DefVelocity = {
+		rotate: {
+			min: 1,
+			max: 5,
+			default: 3
+		},
+		blink: {
+			min: 0.005,
+			max: 0.03,
+			default: 0.02
+		},
+		protrude: {
+			min: 0.5,
+			max: 2,
+			default: 1
+		},
+		slide: {
+			min: 0.05,
+			max: 0.09,
+			default: 0.06
+		}
+	}
+
 	var _proto = FlipList.prototype;
 
 	var options = {
-		flipType: "slide",
-		flipDirection: 'X'
+		flipType: "rotate",
+		flipDirection: 'X',
+		velocity: 0,
+		onComplete: null
 	}
 
 	var wrapper;
@@ -47,6 +74,23 @@ var FlipList = (function(){
 
 			if(_options){
 				extend(options, _options);
+
+				var _t = option("flipType");
+				var _v = option("velocity");
+
+				if(_v == 0){
+					option("velocity", DefVelocity[_t].default);
+				}else{
+					var _min = DefVelocity[_t].min;
+					var _max = DefVelocity[_t].max;
+
+					if(_v < _min || _v > _max){
+						var _def = DefVelocity[_t].default;
+
+						console.warn("Velocity is under or over ("+_v+") than default value(Min: "+_min+", Max: "+_max+"). \nIt will set a default ("+_def+") automatically");
+						option("velocity", _def);
+					}
+				}
 			}
 			
 			init();
@@ -85,6 +129,8 @@ var FlipList = (function(){
 
 		for(var i=0,size=child.length; i<size; i++){
 			var obj = child[i];
+
+			if(obj.nodeName == "#text") continue;
 
 			if(typeof obj === 'object'){
 				if(!obj.id) obj.id = "flipRow_"+i;
@@ -167,33 +213,31 @@ var FlipList = (function(){
 
 	var animate = function(elIndex){
 		if(elIndex < child.length){
+			if(child[elIndex].nodeName == "#text") {
+				animate(++row);
+				return;
+			}
+
 			var _func;
+			
+			increment = option("velocity");
 
 			switch(option("flipType")){
 				case "rotate":
 					degree = 0;
-					increment = 3;
-
 					_func = rotateAnimation;
 					break;
 				case "blink":
 					opacity = 0.0;
-					increment = 0.02;
-
 					_func = blinkAnimation;
 					break;
 				case "protrude":
 					degree = 0;
-					increment = 1;
-
 					_func = protrudeAnimation;
 					break;
 				case "slide":
 					offset = 10;
 					opacity = 0.0;
-
-					increment = 0.05;
-
 					_func = slideAnimation;
 					break;
 			}
@@ -201,6 +245,10 @@ var FlipList = (function(){
 			_func.call(this, child[elIndex], animate);	
 		}else{
 			row = 0;
+
+			if(option("onComplete") != null){
+				option("onComplete").call(this);
+			}
 		}
 	}
 
@@ -247,6 +295,8 @@ var FlipList = (function(){
 		if(typeof obj === "string"){ // "all"
 			for(var i=0; i<child.length; i++){
 				var obj = child[i];
+				if(obj.nodeName == "#text") continue;
+
 				for(var j=0; j<cssProps.length; j++){
 					var prop = cssProps[j].prop;
 					var value = cssProps[j].value || "";
@@ -255,6 +305,8 @@ var FlipList = (function(){
 				}
 			}
 		}else{ 
+			if(obj.nodeName == "#text") return;
+
 			for(var i=0; i<cssProps.length; i++){
 				var prop = cssProps[i].prop;
 				var value = cssProps[i].value || "";
