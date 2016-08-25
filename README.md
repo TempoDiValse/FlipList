@@ -12,9 +12,9 @@ API
 
 2. 옵션 값<br>
 	@key flipType(String) => rotate, blink, protrude, slide <br>
-	@key flipDirection(String(UpperCase)) => X, Y (flipType이 rotate일 경우 사용가능)
-	@key velocity(Integer/Float) => 각 타입마다 최대 최소 허용 속도치가 다름.
-	@key onComplete(Function) => 완료 Callback
+	@key flipDirection(String(UpperCase)) => X, Y (flipType이 rotate일 경우 사용가능) <br>
+	@key velocity(Integer/Float) => 각 타입마다 최대 최소 허용 속도치가 다름. <br>
+	@key onComplete(Function) => 완료 Callback <br>
 
 3. 기타 메소드
 	- getProperty : 옵션값을 확인 할 수 있음<br>
